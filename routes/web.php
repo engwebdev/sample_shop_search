@@ -30,4 +30,5 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// php artisan make:factory ProductFactory --model=Product
+// php artisan make:controller SearchController
+// php artisan make:component EcommerceLayout

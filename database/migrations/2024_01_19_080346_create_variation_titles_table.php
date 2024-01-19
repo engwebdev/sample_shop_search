@@ -12,8 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('variation_titles', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id')->unique();
+            $table->string('name')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

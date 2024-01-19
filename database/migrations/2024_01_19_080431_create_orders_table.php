@@ -12,8 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id')->unique();
+            $table->string('title', 255)->nullable();
+            $table->unsignedBigInteger('user_id')->comment('owner of order');
+
+            $table->string('order_price')->nullable();
+            $table->string('offer_price')->nullable();
+            $table->string('final_price')->nullable();
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

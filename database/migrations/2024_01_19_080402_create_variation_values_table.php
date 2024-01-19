@@ -12,8 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('variation_values', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id')->unique();
+            $table->unsignedBigInteger('variation_title_id')->comment('parent_id');
+//            $table->string('variation_title_name')->nullable();
+
+            $table->string('name')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('variation_title_id')->references('id')->on('variation_titles')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+
         });
     }
 
