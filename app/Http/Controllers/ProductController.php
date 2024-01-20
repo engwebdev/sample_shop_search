@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\Product as ProductResource;
-use App\Models\Product as ProductModel;
-use App\Models\Variation;
+use App\Repositories\ProductRepository;
+use App\Repositories\SearchRepository;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    private SearchRepository $searchRepository;
+    private ProductRepository $productRepository;
 
-    public function search(Request $request)
+    public function __construct(SearchRepository $searchRepository, ProductRepository $productRepository)
+    {
+        $this->searchRepository = $searchRepository;
+        $this->productRepository = $productRepository;
+    }
+
+    public function search(Request $request): \Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\View|\Illuminate\Contracts\Foundation\Application
     {
         if ($request->header('referer')) {
             $explode = explode('/', $request->header('referer'));
@@ -20,40 +27,7 @@ class ProductController extends Controller
             }
         }
 
-//        $filters = ['sort_by', 'order_by', 'limit', 'offset', 'page'];
-//        ?iste=magni&esse=autem&sort_by=aaa&order_by=bbb&page=2
-//        $searchItems = [
-//            'color' => 'green',
-//            'brand' => 'apple'
-//            ...
-//        ];
-        $searchItems = $request->query;
-        $sort_by = $searchItems->get('sort_by');
-        $searchItems->remove('sort_by');
-        $order_by = $searchItems->get('order_by');
-        $searchItems->remove('order_by');
-        $limit = $searchItems->get('limit');
-        $searchItems->remove('limit');
-        $offset = $searchItems->get('offset');
-        $searchItems->remove('offset');
-        $page = $searchItems->get('page');
-        $searchItems->remove('page');
-        $min_price = $searchItems->get('min_price');
-        $searchItems->remove('min_price');
-        $max_price = $searchItems->get('max_price');
-        $searchItems->remove('max_price');
-
-        $productQuery = ProductModel::query();
-        foreach($searchItems as $variation_title_name => $variation_value_name)
-        {
-            $productQuery = $productQuery->whereHas('variations',
-                function ($query) use ($variation_title_name, $variation_value_name) {
-                $query
-                    ->where('variation_title_name', $variation_title_name) // color // brand
-                    ->Where('variation_value_name', $variation_value_name); // green // apple
-            });
-        }
-        $products = $productQuery->with('variations')->get();
+        $products = $this->searchRepository->search($request);
 
         return view('product.search', [
             'products' => $products,
@@ -61,12 +35,15 @@ class ProductController extends Controller
     }
 
 
-    public function show(Request $request, $id)
+    public function show(Request $request, $id): \Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\View|\Illuminate\Contracts\Foundation\Application
     {
-        $product = ProductModel::select(['id', 'title', 'description', 'price'])
-            ->with('variations')
-            ->find($id);
-
+        if (\Illuminate\Support\Facades\Cache::has('product' . '_' . $id)) {
+            return view('product.single', [
+                'product' => (\Illuminate\Support\Facades\Cache::get('product' . '_' . $id)),
+            ]);
+        }
+        $product = $this->productRepository->showProduct($request, $id);
+        \Illuminate\Support\Facades\Cache::put('product' . '_' . $id, $product);
         return view('product.single', [
             'product' => $product,
         ]);
