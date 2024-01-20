@@ -28,7 +28,29 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
-// php artisan make:controller SearchController
-// php artisan make:component EcommerceLayout
+Route::prefix('/product')->group(function () {
+    Route::get('/search', [\App\Http\Controllers\ProductController::class, 'search'])
+        ->name('product.search');
+    Route::get('/{id}', [\App\Http\Controllers\ProductController::class, 'show'])
+        ->name('product.show');
+});
+Route::prefix('/cart')->group(function () {
+    Route::get('/',[\App\Http\Controllers\CartController::class, 'show'])
+        ->name('cart.show');
+    Route::post('/add',[\App\Http\Controllers\CartController::class, 'add'])
+        ->name('cart.add.ajax');
+    Route::post('/remove',[\App\Http\Controllers\CartController::class, 'remove'])
+        ->name('cart.remove.ajax');
+    Route::get('/clear',[\App\Http\Controllers\CartController::class, 'clear'])
+        ->name('cart.clear.ajax');
+    Route::get('/clear',[\App\Http\Controllers\CartController::class, 'delete'])
+        ->name('cart.delete.ajax');
+});
+Route::prefix('/order')->group(function () {
+    Route::get('/')
+        ->name('order.show');
+    Route::post('/')
+        ->name('order.registry');
+});
